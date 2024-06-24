@@ -1,7 +1,7 @@
 use std::{error::Error, fs::{self, OpenOptions}, io::{self, Write}, str::FromStr};
 
 use app::WorkStatus;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -82,11 +82,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                         KeyCode::Char(' ') => {
                             match &app.save.time_started {
                                 Some(time_started) => {
-                                    app.time_started = Some(DateTime::<Utc>::from_str(&time_started).expect("Unable to parse string"));
+                                    app.time_started = Some(DateTime::<Local>::from_str(&time_started).expect("Unable to parse string"));
                                 }
                                 None => {
-                                    app.time_started = Some(Utc::now());
-                                    app.save.time_started = Some(Utc::now().to_string());
+                                    app.time_started = Some(Local::now());
+                                    app.save.time_started = Some(Local::now().to_string());
                                     app.save();
                                 }
                             }
@@ -99,7 +99,7 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
                     // Check if work complete
                     match app.time_started {
                         Some(time_started) => {
-                            let time_passed = (Utc::now()-time_started).to_std().unwrap();
+                            let time_passed = (Local::now()-time_started).to_std().unwrap();
                             let time_remaining = app.work_time.checked_sub(time_passed);
             
                             // Time remaining when out of bounds!
