@@ -1,0 +1,7 @@
+work_time = 10
+blocked_sites = [
+    "www.youtube.com",
+    "discord.com",
+    "store.steampowered.com",
+    "www.reddit.com",
+]

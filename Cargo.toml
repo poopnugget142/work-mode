@@ -1,0 +1,13 @@
+[package]
+name = "work-mode"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.38"
+crossterm = "0.27.0"
+ratatui = "0.26.3"
+serde = { version = "1.0.197", features = ["derive"] }
+toml = "0.8.14"
