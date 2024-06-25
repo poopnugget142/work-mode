@@ -1,4 +1,6 @@
-use chrono::{Datelike, Local, Weekday};
+use core::time;
+
+use chrono::{Datelike, Local, TimeDelta, Weekday};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout}, style::{Color, Style, Stylize}, text::{Line, Span, Text}, widgets::{Block, Borders, Paragraph}, Frame
 };
@@ -118,12 +120,37 @@ pub fn ui(f: &mut Frame, app: &App) {
         Line::from(vec![
             weekday_span2,
         ]),
+        Line::from(vec![
+            Span::raw(format!("{}", app.start_time)),
+        ]),
     ];
 
     if app.status != WorkStatus::Complete && app.status != WorkStatus::Weekend {
         text.insert(0, Line::from(vec![
             timer_text,
         ]));
+    }
+
+    match app.time_started {
+        Some(time_started) => {
+            let latetime = (time_started-Local::now().with_time(app.start_time).unwrap()).num_minutes();
+            if latetime > 0 {
+                text.push(Line::from(vec![
+                    Span::styled(
+                        format!(" You were {} minutes late for work today ... do better next time!", latetime),
+                        Style::default().fg(Color::Red)
+                    )
+                ]));
+            } else {
+                text.push(Line::from(vec![
+                    Span::styled(
+                        format!(" You were {} minutes early for work today congrats!", latetime),
+                        Style::default().fg(Color::Red)
+                    )
+                ]));
+            }
+        }
+        None => {}
     }
 
     let timer = Paragraph::new(text)

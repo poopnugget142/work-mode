@@ -1,3 +1,5 @@
+start_time = "10:0:0"
+# work_time = 28800
 work_time = 10
 blocked_sites = [
     "www.youtube.com",

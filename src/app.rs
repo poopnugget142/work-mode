@@ -1,10 +1,11 @@
 use std::{fs, str::FromStr, time::Duration};
 
-use chrono::{DateTime, Datelike, Local, Weekday};
+use chrono::{DateTime, Datelike, Local, NaiveTime, TimeZone, Weekday};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct Settings {
+    pub start_time: String,
     pub work_time: u64,
     pub blocked_sites: Vec<String>,
 }
@@ -27,6 +28,7 @@ pub enum WorkStatus {
 }
 
 pub struct App {
+    pub start_time: NaiveTime,
     pub work_time: Duration,
     pub time_started: Option<DateTime<Local>>,
     pub status: WorkStatus,
@@ -42,20 +44,20 @@ impl App {
 
         // Read our save data
         let data = fs::read_to_string("Save.toml").expect("Unable to read file");
-        let save: Save = toml::from_str(&data).expect("Unable to decode file");
+        let mut save: Save = toml::from_str(&data).expect("Unable to decode file");
 
         let mut starting_status;
         let mut time_started: Option<DateTime<Local>> = None;
 
+        match &save.time_started {
+            Some(saved_time_started) => {
+                time_started = Some(DateTime::<Local>::from_str(&saved_time_started).expect("Unable to parse string"));
+            }
+            None => {}
+        }
+
         if save.detox {
             starting_status = WorkStatus::Working;
-
-            match &save.time_started {
-                Some(saved_time_started) => {
-                    time_started = Some(DateTime::<Local>::from_str(&saved_time_started).expect("Unable to parse string"));
-                }
-                None => {}
-            }
         } else {
             // Only copy to backup when detox is not active
             // Update our backup to have most up to date networking data
@@ -71,6 +73,13 @@ impl App {
 
                 if last_date.date_naive() == Local::now().date_naive() {
                     starting_status = WorkStatus::Complete;
+                } else {
+                    // You finished your work on another day reset time started
+                    time_started = None;
+                    save.time_started = None;
+
+                    let data = toml::to_string(&save).unwrap();
+                    fs::write("Save.toml", data).expect("Unable to write file");
                 }
             }
             None => {}
@@ -81,7 +90,10 @@ impl App {
             starting_status = WorkStatus::Weekend;
         }
 
+        let start_time = NaiveTime::parse_from_str(&settings.start_time, "%H:%M:%S").expect("Incorrect start time format entered");
+
         App {
+            start_time,
             work_time: Duration::from_secs(settings.work_time),
             time_started,
             status: starting_status,
